@@ -8,23 +8,35 @@
 
 using namespace std;
 
-set<long> seeds;
-map<long, pair<long, long>> maps[7];
+long result = 1 << 30;
 
-long remap(long src, int cat) {
-    map<long, pair<long, long>> &m = maps[cat];
-    auto it = m.upper_bound(src);
-    if (it != m.begin()) {
-        it--;
+map<long, long> seeds;
+map<pair<long, long>, long> maps[7];
 
-        long src_start = it->first;
-        long dst_start = it->second.first;
-        long len = it->second.second;
-        if (src < src_start + len)
-            return dst_start + (src - src_start);
+void remap(long start, long end, int cat) {
+    if (cat == 7) {
+        result = min(result, start);
+        return;
     }
 
-    return src;
+    long last_s = start;
+    for (auto m : maps[cat]) {
+        long src_start = m.first.first;
+        long src_end = m.first.second;
+        long delta = m.second;
+        if (start <= src_end && src_start <= end) {
+            long s = max(start, src_start), e = min(end, src_end);
+
+            if (s > last_s)
+                remap(last_s, (s - 1), cat + 1);
+
+            remap(s + delta, e + delta, cat + 1);
+            last_s = e + 1;
+        }
+    }
+
+    if (last_s <= end)
+        remap(last_s, end, cat + 1);
 }
 
 int main() {
@@ -33,11 +45,12 @@ int main() {
     const regex seedrex("seeds: (.*)");
     smatch linematch;
     if (regex_match(s, linematch, seedrex) && linematch.size() == 2) {
-        long seed;
         stringstream ss(linematch[1]);
-        while (ss) {
-            ss >> seed;
-            seeds.insert(seed);
+        while (true) {
+            long seed, len;
+            ss >> seed >> len;
+            if (!ss) break;
+            seeds[seed] = len;
         }
     }
 
@@ -57,19 +70,18 @@ int main() {
                 long dst_start = stol(linematch[1]);
                 long src_start = stol(linematch[2]);
                 long len = stol(linematch[3]);
-                maps[i][src_start] = make_pair(dst_start, len);
+                maps[i][make_pair(src_start, src_start + len - 1)] = dst_start - src_start;
             }
             else break;
         }
     }
 
-    long result = 1 << 30;
-    for (long seed : seeds) {
-        long dst = seed;
-        for (int i = 0; i < 7; i++)
-            dst = remap(dst, i);
-        result = min(result, dst);
+    for (auto seed : seeds) {
+        //remap(seed.first, seed.first, 0);
+        //remap(seed.second, seed.second, 0);
+        remap(seed.first, seed.first + seed.second - 1, 0);
     }
+
     cout << result << endl;
 
     return 0;
