@@ -20,9 +20,7 @@ long unwrap(vector<long> row) {
     for (int i = 1; i < n; i++)
         deriv[i - 1] = row[i] - row[i - 1];
 
-    deriv.push_back(unwrap(deriv));
-
-    return row.back() + deriv.back();
+    return unwrap(deriv) + row.back();
 }
 
 int main() {
@@ -43,8 +41,7 @@ int main() {
 
         reverse(row.begin(), row.end());
 
-        row.push_back(unwrap(row));
-        result += row.back();
+        result += unwrap(row);
     }
 
     cout << result << endl;
