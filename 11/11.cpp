@@ -34,8 +34,8 @@ int main() {
         cr[i] = er[i] + cr[i - 1];
 
     cc[0] = ec[0];
-    for (int i = 1; i < n; i++)
-        cc[i] = ec[i] + cc[i - 1];
+    for (int j = 1; j < n; j++)
+        cc[j] = ec[j] + cc[j - 1];
 
     long result = 0;
     for (int i = 1; i < galaxy.size(); i++) {
