@@ -30,7 +30,7 @@ int main() {
 
     vector<int> cr(m, 0), cc(n, 0);
     cr[0] = er[0];
-    for (int i = 1; i < n; i++)
+    for (int i = 1; i < m; i++)
         cr[i] = er[i] + cr[i - 1];
 
     cc[0] = ec[0];
@@ -38,8 +38,7 @@ int main() {
         cc[i] = ec[i] + cc[i - 1];
 
     long result = 0;
-    int k = galaxy.size();
-    for (int i = 1; i < k; i++) {
+    for (int i = 1; i < galaxy.size(); i++) {
         int ri = galaxy[i].first, ci = galaxy[i].second;
         for (int j = 0; j < i; j++) {
             int rj = galaxy[j].first, cj = galaxy[j].second;
