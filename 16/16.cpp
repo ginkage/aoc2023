@@ -6,17 +6,25 @@
 #include <regex>
 #include <set>
 #include <queue>
+#include <unordered_set>
 
 using namespace std;
+
+vector<string> matrix;
+int m, n;
+
+struct Hash {
+    size_t operator ()(const pair<int, int>& k) const {
+        return k.first * n + k.second;
+    }
+};
 
 typedef pair<int, int> cell;
 typedef pair<int, int> dir;
 typedef pair<cell, dir> beam;
 
-vector<string> matrix;
-map<cell, set<dir>> beams;
+unordered_map<cell, unordered_set<dir, Hash>, Hash> beams;
 queue<beam> q;
-int m, n;
 
 void maybe_add(int i, int j, int di, int dj) {
     i += di;
@@ -25,19 +33,14 @@ void maybe_add(int i, int j, int di, int dj) {
     if (i < 0 || j < 0 || i >= m || j >= n)
         return;
 
-    cell c = make_pair(i, j);
-    dir d = make_pair(di, dj);
-
-    auto &st = beams[c];
-    if (st.find(d) == st.end()) {
-        st.insert(d);
-        q.push(make_pair(c, d));
-    }
+    cell c(i, j);
+    dir d(di, dj);
+    if (beams[c].insert(d).second)
+        q.emplace(c, d);
 }
 
 int start_at(int i0, int j0, int di0, int dj0) {
     beams.clear();
-
     maybe_add(i0 - di0, j0 - dj0, di0, dj0);
 
     while (!q.empty()) {
