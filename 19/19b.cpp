@@ -10,72 +10,59 @@
 
 using namespace std;
 
-unordered_map<string, int> nmap;
-
-int remap(string r) {
-    auto it = nmap.find(r);
-    if (it != nmap.end())
-        return it->second;
-    int id = nmap.size();
-    nmap[r] = id;
-    return id;
-}
-
 struct rule {
-    int8_t idx;
+    int idx;
     char op;
-    int16_t thr;
-    int dst;
+    int thr;
+    string dst;
 };
 
-unordered_map<int, vector<rule>> rules;
+unordered_map<string, vector<rule>> rules;
 
 struct lims {
-    int16_t mn[4], mx[4];
+    int mn[4], mx[4];
 };
 
-long long result = 0;
+long long iterate(const string &name, lims lim) {
+    long long result = 0;
 
-void iterate(int name, lims lim) {
-    if (name == 0
+    if (name == "R"
             || lim.mn[0] > lim.mx[0]
             || lim.mn[1] > lim.mx[1]
             || lim.mn[2] > lim.mx[2]
             || lim.mn[3] > lim.mx[3])
-        return;
+        return result;
 
-    if (name == 1) {
+    if (name == "A") {
         long long delta = 1;
         for (int i = 0; i < 4; i++)
             delta *= lim.mx[i] - lim.mn[i] + 1;
         result += delta;
-        return;
+        return result;
     }
 
     for (rule &rl : rules[name]) {
         if (rl.op == '<') {
             lims cl = lim;
-            cl.mx[rl.idx] = min(cl.mx[rl.idx], int16_t(rl.thr - 1));
-            iterate(rl.dst, cl);
+            cl.mx[rl.idx] = min(cl.mx[rl.idx], rl.thr - 1);
+            result += iterate(rl.dst, cl);
 
             lim.mn[rl.idx] = max(lim.mn[rl.idx], rl.thr);
         }
         else if (rl.op == '>') {
             lims cl = lim;
-            cl.mn[rl.idx] = max(cl.mn[rl.idx], int16_t(rl.thr + 1));
-            iterate(rl.dst, cl);
+            cl.mn[rl.idx] = max(cl.mn[rl.idx], rl.thr + 1);
+            result += iterate(rl.dst, cl);
 
             lim.mx[rl.idx] = min(lim.mx[rl.idx], rl.thr);
         }
         else
-            iterate(rl.dst, lim);
+            result += iterate(rl.dst, lim);
     }
+    return result;
 }
 
 int main() {
-    nmap["R"] = 0;
-    nmap["A"] = 1;
-
     const regex linerex("(.*)\\{(.*)\\}");
     const regex rulerex("(.)(.)(\\d+):(.*)");
     while (true) {
@@ -85,35 +72,28 @@ int main() {
 
         smatch linematch;
         if (regex_match(s, linematch, linerex) && linematch.size() == 3) {
-            string name = linematch[1].str();
             string r = linematch[2].str();
-            auto &vr = rules[remap(name)];
+            auto &vr = rules[linematch[1].str()];
             stringstream ss(r);
             while (true) {
                 string ex;
                 getline(ss, ex, ',');
                 if (!ss) break;
 
+                rule rl;
                 smatch rulematch;
                 if (regex_match(ex, rulematch, rulerex) && rulematch.size() == 5) {
                     string m1 = rulematch[1].str();
-                    string m2 = rulematch[2].str();
-                    string m3 = rulematch[3].str();
-                    string m4 = rulematch[4].str();
-
-                    rule rl;
                     rl.idx = (m1 == "x" ? 0 : (m1 == "m" ? 1 : m1 == "a" ? 2 : 3));
-                    rl.op = m2[0];
-                    rl.thr = stoi(m3);
-                    rl.dst = remap(m4);
-                    vr.push_back(rl);
+                    rl.op = rulematch[2].str()[0];
+                    rl.thr = stoi(rulematch[3].str());
+                    rl.dst = rulematch[4].str();
                 }
                 else {
-                    rule rl;
                     rl.op = 0;
-                    rl.dst = remap(ex);
-                    vr.push_back(rl);
+                    rl.dst = ex;
                 }
+                vr.push_back(rl);
             }
         }
         else break;
@@ -122,9 +102,7 @@ int main() {
     lims lim;
     lim.mn[0] = lim.mn[1] = lim.mn[2] = lim.mn[3] = 1;
     lim.mx[0] = lim.mx[1] = lim.mx[2] = lim.mx[3] = 4000;
-    iterate(remap("in"), lim);
-
-    cout << result << endl;
+    cout << iterate("in", lim) << endl;
 
     return 0;
 }
