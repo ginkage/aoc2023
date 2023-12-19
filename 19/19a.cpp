@@ -14,9 +14,9 @@ struct rule {
     string dst;
 };
 
-map<string, vector<rule>> rules;
-
 int main() {
+    unordered_map<string, vector<rule>> rules;
+
     const regex linerex("(.*)\\{(.*)\\}");
     const regex rulerex("(.)(.)(\\d+):(.*)");
     while (true) {
