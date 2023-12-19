@@ -4,9 +4,6 @@
 #include <vector>
 #include <string>
 #include <regex>
-#include <set>
-#include <queue>
-#include <unordered_set>
 
 using namespace std;
 
@@ -29,35 +26,27 @@ int main() {
 
         smatch linematch;
         if (regex_match(s, linematch, linerex) && linematch.size() == 3) {
-            string name = linematch[1].str();
-            string r = linematch[2].str();
-            stringstream ss(r);
+            auto &vr = rules[linematch[1].str()];
+            stringstream ss(linematch[2].str());
             while (true) {
                 string ex;
                 getline(ss, ex, ',');
                 if (!ss) break;
 
-                auto &vr = rules[name];
+                rule rl;
                 smatch rulematch;
                 if (regex_match(ex, rulematch, rulerex) && rulematch.size() == 5) {
                     string m1 = rulematch[1].str();
-                    string m2 = rulematch[2].str();
-                    string m3 = rulematch[3].str();
-                    string m4 = rulematch[4].str();
-
-                    rule rl;
                     rl.idx = (m1 == "x" ? 0 : (m1 == "m" ? 1 : m1 == "a" ? 2 : 3));
-                    rl.op = m2[0];
-                    rl.thr = stoi(m3);
-                    rl.dst = m4;
-                    vr.push_back(rl);
+                    rl.op = rulematch[2].str()[0];
+                    rl.thr = stoi(rulematch[3].str());
+                    rl.dst = rulematch[4].str();
                 }
                 else {
-                    rule rl;
                     rl.op = 0;
                     rl.dst = ex;
-                    vr.push_back(rl);
                 }
+                vr.push_back(rl);
             }
         }
         else break;
@@ -73,30 +62,19 @@ int main() {
         smatch linematch;
         if (regex_match(s, linematch, partrex) && linematch.size() == 5) {
             int part[4];
-            part[0] = stoi(linematch[1].str());
-            part[1] = stoi(linematch[2].str());
-            part[2] = stoi(linematch[3].str());
-            part[3] = stoi(linematch[4].str());
+            for (int i = 0; i < 4; i++)
+                part[i] = stoi(linematch[i + 1].str());
 
             string name = "in";
             while (true) {
                 for (rule &rl : rules[name]) {
                     if (rl.op == '<') {
-                        if (part[rl.idx] < rl.thr) {
-                            name = rl.dst;
-                            break;
-                        }
+                        if (part[rl.idx] < rl.thr) { name = rl.dst; break; }
                     }
                     else if (rl.op == '>') {
-                        if (part[rl.idx] > rl.thr) {
-                            name = rl.dst;
-                            break;
-                        }
+                        if (part[rl.idx] > rl.thr) { name = rl.dst; break; }
                     }
-                    else {
-                        name = rl.dst;
-                        break;
-                    }
+                    else { name = rl.dst; break; }
                 }
 
                 if (name == "A") {

@@ -59,9 +59,8 @@ int main() {
 
         smatch linematch;
         if (regex_match(s, linematch, linerex) && linematch.size() == 3) {
-            string r = linematch[2].str();
             auto &vr = rules[linematch[1].str()];
-            stringstream ss(r);
+            stringstream ss(linematch[2].str());
             while (true) {
                 string ex;
                 getline(ss, ex, ',');
