@@ -14,9 +14,42 @@ struct rule {
     string dst;
 };
 
-int main() {
-    unordered_map<string, vector<rule>> rules;
+unordered_map<string, vector<rule>> rules;
 
+struct lims { int mn[4], mx[4]; };
+
+long long iterate(const string &name, lims lim) {
+    if (name == "R" || lim.mn[0] > lim.mx[0] || lim.mn[1] > lim.mx[1] || lim.mn[2] > lim.mx[2] || lim.mn[3] > lim.mx[3])
+        return 0;
+
+    if (name == "A") {
+        long long delta = 1;
+        for (int i = 0; i < 4; i++)
+            delta *= lim.mx[i] - lim.mn[i] + 1;
+        return delta;
+    }
+
+    long long result = 0;
+    for (rule &rl : rules[name]) {
+        if (rl.op == '<') {
+            lims cl = lim;
+            cl.mx[rl.idx] = min(cl.mx[rl.idx], rl.thr - 1);
+            result += iterate(rl.dst, cl);
+            lim.mn[rl.idx] = max(lim.mn[rl.idx], rl.thr);
+        }
+        else if (rl.op == '>') {
+            lims cl = lim;
+            cl.mn[rl.idx] = max(cl.mn[rl.idx], rl.thr + 1);
+            result += iterate(rl.dst, cl);
+            lim.mx[rl.idx] = min(lim.mx[rl.idx], rl.thr);
+        }
+        else
+            result += iterate(rl.dst, lim);
+    }
+    return result;
+}
+
+int main() {
     const regex linerex("(.*)\\{(.*)\\}");
     const regex rulerex("(.)(.)(\\d+):(.*)");
     while (true) {
@@ -89,6 +122,9 @@ int main() {
     }
 
     cout << result << endl;
+
+    lims lim { .mn = { 1, 1, 1, 1}, .mx = { 4000, 4000, 4000, 4000 } };
+    cout << iterate("in", lim) << endl;
 
     return 0;
 }
