@@ -91,15 +91,15 @@ int main() {
         }
 
     long long result = 1;
-    queue<pair<pair<int, int>, bool>> q;
+    vector<pair<pair<int, int>, bool>> q(256);
+    int head = 0, tail = 0, sz = q.size() - 1;
     for (int i = 1; i <= 1000000000 && ndeps > 0; i++) {
-        q.emplace(make_pair(0, 0), false);
-        while (!q.empty()) {
-            auto p = q.front();
+        q[head++ % q.size()] = make_pair(make_pair(0, 0), false);
+        while (head != tail) {
+            auto p = q[tail++ & sz];
             int id = p.first.first, in = p.first.second;
             bool pulse = p.second;
             node &n = nodes[id];
-            q.pop();
 
             if (!pulse && n.dep) {
                 result = lcm(result, i);
@@ -110,20 +110,20 @@ int main() {
             switch (n.t) {
             case broadcast:
                 for (auto &dst : n.out)
-                    q.emplace(dst, pulse);
+                    q[head++ & sz] = make_pair(dst, pulse);
                 break;
             case flipflop:
                 if (!pulse) {
                     n.on = !n.on;
                     for (auto &dst : n.out)
-                        q.emplace(dst, n.on);
+                        q[head++ & sz] = make_pair(dst, n.on);
                 }
                 break;
             case conjunct:
                 n.state = (n.state & ~(1 << in)) | (pulse << in);
-                bool good = (n.state == n.all);
+                bool signal = (n.state != n.all);
                 for (auto &dst : n.out)
-                    q.emplace(dst, !good);
+                    q[head++ & sz] = make_pair(dst, signal);
                 break;
             }
         }
