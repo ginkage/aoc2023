@@ -104,8 +104,10 @@ int main() {
             node &n = nodes[id];
             q.pop();
 
-            if (!pulse && n.dep)
+            if (!pulse && n.dep) {
                 result = lcm(result, i);
+                n.dep = false;
+            }
 
             switch (n.t) {
             case broadcast:
