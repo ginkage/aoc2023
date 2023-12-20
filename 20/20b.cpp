@@ -35,9 +35,6 @@ struct node {
     bool dep;
 };
 
-unordered_map<int, node> nodemap;
-vector<node> nodes;
-
 vector<string> split(const string &s, const string &delimiter) {
     vector<string> res;
     size_t pos_start = 0;
@@ -49,13 +46,10 @@ vector<string> split(const string &s, const string &delimiter) {
     return res;
 }
 
-bool push_button(int rx) {
-    return false;
-}
-
 int main() {
     remap("broadcaster");
     const regex linerex("([%&]?)(.*) -> (.*)");
+    unordered_map<int, node> nodemap;
     while (true) {
         string s;
         getline(cin, s);
@@ -80,7 +74,7 @@ int main() {
         }
     }
 
-    nodes.resize(nodemap.size());
+    vector<node> nodes(nodemap.size());
     for (auto it : nodemap)
         nodes[it.first] = it.second;
 
