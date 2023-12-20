@@ -5,6 +5,7 @@
 #include <string>
 #include <regex>
 #include <queue>
+#include <numeric>
 
 using namespace std;
 
@@ -31,6 +32,7 @@ struct node {
     bool on;
     vector<pair<int, int>> out;
     int state, ins, all;
+    bool dep;
 };
 
 unordered_map<int, node> nodemap;
@@ -47,41 +49,7 @@ vector<string> split(const string &s, const string &delimiter) {
     return res;
 }
 
-queue<pair<pair<int, int>, bool>> q;
-
 bool push_button(int rx) {
-    q.emplace(make_pair(0, 0), false);
-    while (!q.empty()) {
-        auto p = q.front();
-        int id = p.first.first, in = p.first.second;
-        bool pulse = p.second;
-        q.pop();
-
-        if (!pulse && id == rx)
-            return true;
-
-        node &n = nodes[id];
-        switch (n.t) {
-        case broadcast:
-            for (auto &dst : n.out)
-                q.emplace(dst, pulse);
-            break;
-        case flipflop:
-            if (!pulse) {
-                n.on = !n.on;
-                for (auto &dst : n.out)
-                    q.emplace(dst, n.on);
-            }
-            break;
-        case conjunct:
-            n.state = (n.state & ~(1 << in)) | (pulse << in);
-            bool good = (n.state == n.all);
-            for (auto &dst : n.out)
-                q.emplace(dst, !good);
-            break;
-        }
-    }
-
     return false;
 }
 
@@ -103,6 +71,7 @@ int main() {
             n.t = st == "%" ? flipflop : (st == "&" ? conjunct : broadcast);
             n.on = false;
             n.state = 0;
+            n.dep = false;
             for (auto s : vs) {
                 int dst = remap(s), in = nodemap[dst].ins++;
                 nodemap[dst].all |= (1 << in);
@@ -115,12 +84,52 @@ int main() {
     for (auto it : nodemap)
         nodes[it.first] = it.second;
 
-    int rx = remap("rx");
-    for (int i = 0; i < 100000; i++)
-        if (push_button(rx)) {
-            cout << (i+1) << endl;
-            break;
+    int rx = remap("rx"), tx = -1;
+    for (int i = 0; i < nodes.size() && tx < 0; i++)
+        if (i != rx && nodes[i].out[0].first == rx)
+            tx = i;
+
+    for (int i = 0; i < nodes.size(); i++)
+        if (i != rx && nodes[i].out[0].first == tx)
+            nodes[i].dep = true;
+
+    long long result = 1;
+    queue<pair<pair<int, int>, bool>> q;
+    for (int i = 1; i <= 5000; i++) {
+        q.emplace(make_pair(0, 0), false);
+        while (!q.empty()) {
+            auto p = q.front();
+            int id = p.first.first, in = p.first.second;
+            bool pulse = p.second;
+            node &n = nodes[id];
+            q.pop();
+
+            if (!pulse && n.dep)
+                result = lcm(result, i);
+
+            switch (n.t) {
+            case broadcast:
+                for (auto &dst : n.out)
+                    q.emplace(dst, pulse);
+                break;
+            case flipflop:
+                if (!pulse) {
+                    n.on = !n.on;
+                    for (auto &dst : n.out)
+                        q.emplace(dst, n.on);
+                }
+                break;
+            case conjunct:
+                n.state = (n.state & ~(1 << in)) | (pulse << in);
+                bool good = (n.state == n.all);
+                for (auto &dst : n.out)
+                    q.emplace(dst, !good);
+                break;
+            }
         }
+    }
+
+    cout << result << endl;
 
     return 0;
 }
