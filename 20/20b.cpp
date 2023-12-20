@@ -89,13 +89,16 @@ int main() {
         if (i != rx && nodes[i].out[0].first == rx)
             tx = i;
 
+    int ndeps = 0;
     for (int i = 0; i < nodes.size(); i++)
-        if (i != rx && nodes[i].out[0].first == tx)
+        if (i != rx && nodes[i].out[0].first == tx) {
             nodes[i].dep = true;
+            ndeps++;
+        }
 
     long long result = 1;
     queue<pair<pair<int, int>, bool>> q;
-    for (int i = 1; i <= 5000; i++) {
+    for (int i = 1; i <= 1000000000 && ndeps > 0; i++) {
         q.emplace(make_pair(0, 0), false);
         while (!q.empty()) {
             auto p = q.front();
@@ -107,6 +110,7 @@ int main() {
             if (!pulse && n.dep) {
                 result = lcm(result, i);
                 n.dep = false;
+                ndeps--;
             }
 
             switch (n.t) {
