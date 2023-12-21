@@ -58,10 +58,11 @@ int main() {
     m = matrix.size();
     n = matrix[0].size();
 
-    vector<long> pd2(m + n), d3(m + n);
+    vector<long> pd2(n), d3(n);
     long result = 0, pn = 0;
     maybe_push(si, sj);
-    for (int i = 1; i <= 5239; i++) {
+    int lim = n * 10;
+    for (int i = 1; i < lim; i++) {
         swap(cur, pre);
         swap(cur, nxt);
         nxt.clear();
@@ -73,7 +74,7 @@ int main() {
             maybe_push(i, j + 1);
         }
         if (i % 2 != 0) {
-            int j = (i / 2) % (m + n);
+            int j = (i / 2) % n;
             long d1 = nxt.size();
             long d2 = d1 - pn;
             d3[j] = d2 - pd2[j];
@@ -83,7 +84,7 @@ int main() {
         }
     }
 
-    for (int i = 5241, j = 0; i <= 26501365; i += 2, j = (j + 1) % (m + n)) {
+    for (int i = lim + 1, j = 0; i <= 26501365; i += 2, j = (j + 1) % n) {
         long d2 = pd2[j] + d3[j];
         long d1 = pn + d2;
         result += d1;
