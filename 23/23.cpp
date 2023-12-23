@@ -39,14 +39,12 @@ struct node_t {
 vector<node_t> nodes;
 
 void iterate(int cur, uint64_t visit, int len) {
-    node_t &node = nodes[cur];
-    for (pair<int, int> &edge : node.edge) {
+    for (pair<int, int> &edge : nodes[cur].edge) {
         uint64_t mask = (1lu << edge.first);
         if (!(visit & mask)) {
             node_t &to = nodes[edge.first];
             int nl = len + edge.second;
-            if (to.max_dist < nl)
-                to.max_dist = nl;
+            to.max_dist = max(to.max_dist, nl);
             iterate(edge.first, visit | mask, nl);
         }
     }
@@ -64,7 +62,6 @@ int main() {
     n = matrix[0].size();
     coord_t st(0, 1), en(m - 1, n - 2);
 
-    unordered_set<coord_t, Hash> nodeset;
     unordered_map<coord_t, int, Hash> remap;
     vector<edge_t> edges;
 
@@ -76,8 +73,6 @@ int main() {
     q.push({ .edge = { .from = st, .to = make_pair(1, 1), .len = 1 }, .last = st });
     remap[st] = 0;
     remap[en] = 1;
-    nodeset.insert(st);
-    nodeset.insert(en);
     while (!q.empty()) {
         wave_t wave = q.front();
         q.pop();
@@ -119,8 +114,9 @@ int main() {
             }
             else {
                 edges.push_back(wave.edge);
-                if (nodeset.insert(cur).second) {
-                    remap[cur] = nodeset.size() - 1;
+                if (remap.find(cur) == remap.end()) {
+                    int sz = remap.size();
+                    remap[cur] = sz;
                     for (int t = 0; t < nd; t++)
                         q.push({ .edge = { .from = cur, .to = dirs[t], .len = 1 }, .last = cur });
                 }
@@ -128,19 +124,18 @@ int main() {
         }
     }
 
-    nodes.resize(nodeset.size());
-    for (edge_t &e : edges) {
-        int from = remap[e.from], to = remap[e.to], len = e.len;
-        nodes[from].edge.emplace_back(to, len);
-        if (from != 0 && to != 1)
-            nodes[to].edge.emplace_back(from, len);
-    }
-
-    for (node_t &node : nodes)
-        sort(node.edge.begin(), node.edge.end(), [](const pair<int, int> &l, const pair<int, int> &r) { return l.second > r.second; });
+    nodes.resize(remap.size());
+    for (edge_t &e : edges)
+        nodes[remap[e.from]].edge.emplace_back(remap[e.to], e.len);
 
     iterate(0, 0, 0);
+    cout << nodes[1].max_dist << endl;
 
+    for (edge_t &e : edges)
+        if (e.from != st && e.to != en)
+            nodes[remap[e.to]].edge.emplace_back(remap[e.from], e.len);
+
+    iterate(0, 0, 0);
     cout << nodes[1].max_dist << endl;
 
     return 0;
