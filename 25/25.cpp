@@ -32,17 +32,16 @@ struct Hash {
 unordered_map<int, vector<int>> node;
 unordered_map<pair<int, int>, long long, Hash> weight;
 
-void descend(unordered_map<int, vector<bool>> &cur_level, vector<bool> &visited) {
+void descend(unordered_map<int, unordered_set<int>> &cur_level, vector<bool> &visited) {
     if (cur_level.empty()) return;
 
-    unordered_map<int, vector<bool>> next_level;
+    unordered_map<int, unordered_set<int>> next_level;
     for (auto &cur : cur_level) {
         int from = cur.first;
         for (int to : node[from])
             if (!visited[to]) {
                 visited[to] = true;
-                next_level[to] = vector<bool>(n);
-                next_level[to][to] = true;
+                next_level[to].insert(to);
             }
     }
 
@@ -53,14 +52,9 @@ void descend(unordered_map<int, vector<bool>> &cur_level, vector<bool> &visited)
         for (int to : node[from]) {
             auto it = next_level.find(to);
             if (it != next_level.end()) {
-                vector<bool> &nxt = it->second;
-                int sz = 0;
-                for (int i = 0; i < n; i++)
-                    if (nxt[i]) {
-                        cur.second[i] = true;
-                        sz++;
-                    }
-                weight[make_pair(min(from, to), max(from, to))] += sz;
+                unordered_set<int> &nxt = it->second;
+                cur.second.insert(nxt.begin(), nxt.end());
+                weight[make_pair(min(from, to), max(from, to))] += nxt.size();
             }
         }
     }
@@ -90,9 +84,8 @@ int main() {
     n = names.size();
     for (int i = 0; i < n; i++) {
         vector<bool> visited(n);
-        unordered_map<int, vector<bool>> cur;
-        cur[i] = vector<bool>(n);
-        cur[i][i] = true;
+        unordered_map<int, unordered_set<int>> cur;
+        cur[i].insert(i);
         visited[i] = true;
         descend(cur, visited);
     }
